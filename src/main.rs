@@ -1,11 +1,11 @@
 mod error;
-mod process;
 mod config;
 mod cs2;
+mod platform;
 
 use config::Config;
 use error::Error;
-use process::{ProcessTrait, WindowsProcess};
+use platform::ProcessTrait;
 
 fn main() -> Result<(), Error> {
     
@@ -17,11 +17,11 @@ fn main() -> Result<(), Error> {
             config
         }
     };
-    
-    let mut process = match WindowsProcess::find_process_by_name("cs2.exe") {
+
+    let mut process = match platform::Process::find_process_by_name(platform::PROCESS_NAME) {
         Ok(process) => process,
         Err(err) => {
-            println!("couldn't attach to process: cs2.exe, error: {:?}", err);
+            println!("couldn't attach to process: {}, error: {}", platform::PROCESS_NAME, err);
             return Ok(());
         }
     };

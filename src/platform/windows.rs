@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![cfg(target_os = "windows")]
 
 use std::{ffi, path::Path};
 use windows::Win32::{
@@ -24,29 +25,15 @@ use windows::Win32::{
 };
 
 use crate::error::Error;
-
-pub trait ProcessTrait {
-    fn attach(&mut self) -> Result<(), Error>;
-    fn detach(&mut self) -> Result<(), Error>;
-    
-    fn mem_read(&self, address: usize, data: &mut [u8]) -> Result<(), Error>;
-    fn mem_write(&self, address: usize, data: &[u8]) -> Result<(), Error>;
-
-    fn mod_find(&self, name: &str) -> Result<ProcessModule, Error>;
-}
-
-pub struct ProcessModule {
-    pub module_base: usize,
-    pub module_size: usize
-}
+use super::{ProcessModule, ProcessTrait};
 
 #[derive(Clone)]
-pub struct WindowsProcess {
+pub struct Process {
     process_id: u32,
     process_handle: Option<HANDLE>
 }
 
-impl WindowsProcess {
+impl Process {
     pub fn new(process_id: u32) -> Self {
         Self {
             process_id,
@@ -108,7 +95,7 @@ impl WindowsProcess {
     }    
 }
 
-impl ProcessTrait for WindowsProcess {
+impl ProcessTrait for Process {
     fn attach(&mut self) -> Result<(), Error> {
         if self.process_handle.is_some() {
             return Err(Error::AlreadyAttached)
