@@ -7,8 +7,10 @@ license = "MIT"
 
 [dependencies]
 chrono = "0.4.39"
-pelite = "0.10.0"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.135"
 thiserror = "2.0.11"
+
+[target.'cfg(windows)'.dependencies]
 windows = { version = "0.59.0", features = ["Win32_System_Diagnostics_ToolHelp", "Win32_System_Memory", "Win32_System_Threading", "Win32_System_Diagnostics_Debug"] }
+pelite = "0.10.0"
