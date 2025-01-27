@@ -1,4 +1,4 @@
-use crate::{config::Config, error::Result, platform::{ProcessModule, ProcessTrait}};
+use crate::{config::Config, error::{Error, Result}, platform::{ProcessModule, ProcessTrait}};
 use std::{ffi::OsStr, fs::{create_dir_all, File}, io::{self, Write}, path::Path};
 use chrono::{DateTime, Datelike, Utc};
 
@@ -6,20 +6,31 @@ use chrono::{DateTime, Datelike, Utc};
 use pelite::image::{IMAGE_DOS_HEADER, IMAGE_NT_HEADERS64, IMAGE_OPTIONAL_HEADER64, IMAGE_SECTION_HEADER};
 
 pub fn dump(process: &impl ProcessTrait, config: &Config) {
-    if let Some(modules) = &config.modules {
-        for module_name in modules {
-            match process.mod_find(&module_name) {
-                Ok(module) => {
-                    println!("found module: {} at 0x{:X}", &module_name, module.module_base);
-                    
-                    if let Err(err) = dump_module(process, &module_name, &module) {
-                        println!("failed to dump module: {}, error: {}", &module_name, err);
-                    }
-                },
-                Err(err) => {
-                    println!("couldn't find module: {}, error: {}", &module_name, err);
-                }
+    let modules = match &config.modules {
+        Some(modules) => modules,
+        None => return
+    };
+
+    for mod_name in modules {
+        let module = match process.mod_find(mod_name) {
+            Ok(module) => module,
+            Err(err) => {
+                println!("failed to find module: {}, error: {}", mod_name, err);
+                continue
             }
+        };
+
+        match dump_module(process, mod_name, &module) {
+            Ok(_) => println!("dumped module: {} at 0x{:X}", mod_name, module.module_base),
+            Err(err) => {
+                if let Error::IoError(err) = &err {
+                    if err.kind() == io::ErrorKind::AlreadyExists {
+                        println!("module already dumped: {}", mod_name);
+                    }
+                } else {
+                    println!("failed to dump module: {}, error: {}", mod_name, err);
+                }
+            },
         }
     }
 }
@@ -47,9 +58,7 @@ fn write_dump(name: &str, timestamp: DateTime<Utc>, data: &[u8]) -> Result<()> {
             file.write(&data)?;
         },
         Err(err) => {
-            if err.kind() != io::ErrorKind::AlreadyExists {
-                return Err(err.into());
-            }
+            return Err(err.into());
         }
     }
 
