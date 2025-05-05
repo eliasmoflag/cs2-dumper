@@ -9,13 +9,7 @@ pub type Process = windows::Process;
 pub type Process = linux::Process;
 
 #[cfg(target_os = "windows")]
-pub const PROCESS_NAME: &str = "cs2.exe";
-#[cfg(target_os = "linux")]
-pub const PROCESS_NAME: &str = "cs2";
-
-#[cfg(target_os = "windows")]
-pub const DEFAULT_MODULES: [&'static str; 21] = [
-    "cs2.exe",
+pub const DEFAULT_MODULES: [&'static str; 20] = [
     "client.dll",
     "engine2.dll",
     "schemasystem.dll",
@@ -39,8 +33,7 @@ pub const DEFAULT_MODULES: [&'static str; 21] = [
 ];
 
 #[cfg(target_os = "linux")]
-pub const DEFAULT_MODULES: [&'static str; 21] = [
-    "cs2",
+pub const DEFAULT_MODULES: [&'static str; 20] = [
     "libclient.so",
     "libengine2.so",
     "libschemasystem.so",

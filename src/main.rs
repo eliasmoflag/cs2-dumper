@@ -1,14 +1,23 @@
 mod error;
 mod config;
-mod cs2;
+mod game;
 mod platform;
 
 use config::Config;
 use error::Error;
 use platform::ProcessTrait;
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    process: String
+}
 
 fn main() -> Result<(), Error> {
-    
+    let args = Args::parse();
+
     let config = match Config::load() {
         Ok(config) => config,
         Err(_) => {
@@ -18,19 +27,19 @@ fn main() -> Result<(), Error> {
         }
     };
 
-    let mut process = match platform::Process::find_process_by_name(platform::PROCESS_NAME) {
+    let mut process = match platform::Process::find_process_by_name(&args.process) {
         Ok(process) => process,
         Err(err) => {
-            println!("couldn't attach to process: {}, error: {}", platform::PROCESS_NAME, err);
+            println!("couldn't attach to process: {}, error: {}", args.process, err);
             return Ok(());
         }
     };
 
     process.attach()?;
 
-    println!("attached to cs2.exe");
+    println!("attached to {}", args.process);
 
-    cs2::modules::dump(&mut process, &config);
+    game::modules::dump(&mut process, &config);
 
     Ok(())
 }
